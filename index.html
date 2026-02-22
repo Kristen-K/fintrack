@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinTrack</title>
+    <meta name="description" content="Personal & Business Finance Tracker" />
+    <meta name="theme-color" content="#0f0f23" />
+    <link rel="manifest" href="manifest.json" />
+    <!-- Apple PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FinTrack" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0f0f23; color: #e2e8f0; font-family: system-ui, sans-serif; }
+      #root { min-height: 100vh; }
+      #loading {
+        display: flex; align-items: center; justify-content: center;
+        min-height: 100vh; flex-direction: column; gap: 12px;
+        color: #6366f1; font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="loading">
+        <div style="font-size:40px">⬡</div>
+        <div>Loading FinTrack...</div>
+      </div>
+    </div>
+
+    <!-- React + Babel (loads your JSX file directly — no build step needed) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.js"></script>
+
+    <script>
+      // Make recharts available as a module-style import within the JSX
+      window.rechartsLib = Recharts;
+    </script>
+
+    <!-- Shim so the "import { x } from 'recharts'" in the JSX works via Babel -->
+    <script type="text/babel" data-presets="react">
+      // Expose recharts components globally so the app can use them
+      const { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line,
+              XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+              Legend, AreaChart, Area } = Recharts;
+
+      // Polyfill window.storage using localStorage so data persists
+      window.storage = {
+        get: (key) => {
+          return new Promise((resolve) => {
+            const val = localStorage.getItem(key);
+            resolve(val ? { key, value: val } : null);
+          });
+        },
+        set: (key, value) => {
+          return new Promise((resolve) => {
+            localStorage.setItem(key, value);
+            resolve({ key, value });
+          });
+        },
+        delete: (key) => {
+          return new Promise((resolve) => {
+            localStorage.removeItem(key);
+            resolve({ key, deleted: true });
+          });
+        },
+        list: (prefix = '') => {
+          return new Promise((resolve) => {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+            resolve({ keys });
+          });
+        }
+      };
+    </script>
+
+    <!-- Load your finance app -->
+    <script type="text/babel" src="finance-app.jsx" data-presets="react"></script>
+
+    <script type="text/babel" data-presets="react">
+      // Remove loading screen and mount the app
+      document.getElementById('loading').remove();
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
